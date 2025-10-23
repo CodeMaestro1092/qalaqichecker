@@ -23,6 +23,8 @@ class DatabasePostgres {
         telegram_chat_id VARCHAR(100),
         last_checked TIMESTAMP,
         notified BOOLEAN DEFAULT FALSE,
+        notified_date VARCHAR(50),
+        notified_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
@@ -47,8 +49,9 @@ class DatabasePostgres {
     await pool.query(
       `INSERT INTO users (
         id, personal_number, phone_number, category_code, category_name,
-        center_id, center_name, email, telegram_chat_id, last_checked, notified
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        center_id, center_name, email, telegram_chat_id, last_checked, notified,
+        notified_date, notified_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
       [
         user.id,
         user.personalNumber,
@@ -61,6 +64,8 @@ class DatabasePostgres {
         user.telegramChatId || null,
         user.lastChecked ? new Date(user.lastChecked) : null,
         user.notified || false,
+        user.notifiedDate || null,
+        user.notifiedAt ? new Date(user.notifiedAt) : null,
       ]
     );
   }
@@ -80,6 +85,8 @@ class DatabasePostgres {
       telegramChatId: row.telegram_chat_id,
       lastChecked: row.last_checked?.toISOString(),
       notified: row.notified,
+      notifiedDate: row.notified_date,
+      notifiedAt: row.notified_at?.toISOString(),
     }));
   }
 
@@ -127,6 +134,14 @@ class DatabasePostgres {
     if (updates.notified !== undefined) {
       fields.push(`notified = $${paramCount++}`);
       values.push(updates.notified);
+    }
+    if (updates.notifiedDate !== undefined) {
+      fields.push(`notified_date = $${paramCount++}`);
+      values.push(updates.notifiedDate);
+    }
+    if (updates.notifiedAt !== undefined) {
+      fields.push(`notified_at = $${paramCount++}`);
+      values.push(updates.notifiedAt ? new Date(updates.notifiedAt) : null);
     }
 
     if (fields.length === 0) return;

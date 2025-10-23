@@ -10,6 +10,8 @@ export interface User {
   telegramChatId?: string;
   lastChecked?: string;
   notified?: boolean;
+  notifiedDate?: string; // The exam date that was notified about
+  notifiedAt?: string;   // When the notification was sent
 }
 
 export interface Category {

@@ -4,6 +4,7 @@ import { checkExamAvailability } from '../utils/checkAvailability';
 import { db } from '../utils/database';
 import { User } from '../types';
 import { triggerManualCheck } from '../utils/scheduler';
+import { sendConfirmationEmail, sendConfirmationTelegram } from '../utils/notifications';
 
 const router = express.Router();
 
@@ -115,6 +116,38 @@ router.post('/subscribe', async (req: Request, res: Response) => {
     };
 
     await db.addUser(user);
+
+    // Send confirmation emails/messages
+    const confirmationPromises = [];
+
+    if (email) {
+      confirmationPromises.push(
+        sendConfirmationEmail(email, {
+          categoryName,
+          centerName,
+        })
+      );
+    }
+
+    if (telegramChatId) {
+      confirmationPromises.push(
+        sendConfirmationTelegram(telegramChatId, {
+          categoryName,
+          centerName,
+        })
+      );
+    }
+
+    // Send confirmations in background (don't wait)
+    Promise.allSettled(confirmationPromises).then((results) => {
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+          console.log(`✅ Confirmation ${index + 1} sent successfully`);
+        } else if (result.status === 'rejected') {
+          console.error(`❌ Confirmation ${index + 1} failed:`, result.reason);
+        }
+      });
+    });
 
     res.json({
       success: true,

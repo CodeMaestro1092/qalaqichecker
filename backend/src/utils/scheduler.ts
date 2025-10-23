@@ -48,20 +48,38 @@ async function checkAllUsers() {
           lastChecked: new Date().toISOString(),
         });
 
-        if (result.available && !user.notified) {
-          console.log(`✅ Exam found for ${user.personalNumber}! Sending notification...`);
+        if (result.available) {
+          // Check if this is a NEW exam date (different from what we notified about before)
+          const isNewExamDate = !user.notifiedDate || user.notifiedDate !== result.date;
 
-          await notifyUser(user.email, user.telegramChatId, result);
+          if (isNewExamDate) {
+            console.log(`✅ ${user.notified ? 'NEW' : 'First'} exam found for ${user.personalNumber}! Date: ${result.date}`);
+            console.log(`   Sending notification...`);
 
-          await db.updateUser(user.id, {
-            notified: true,
-          });
+            await notifyUser(user.email, user.telegramChatId, result);
 
-          console.log(`📧 Notification sent to user ${user.personalNumber}`);
-        } else if (result.available && user.notified) {
-          console.log(`Already notified user ${user.personalNumber}, skipping...`);
+            await db.updateUser(user.id, {
+              notified: true,
+              notifiedDate: result.date,
+              notifiedAt: new Date().toISOString(),
+            });
+
+            console.log(`📧 Notification sent to user ${user.personalNumber}`);
+          } else {
+            console.log(`Already notified about exam on ${result.date} for ${user.personalNumber}, skipping...`);
+          }
         } else {
           console.log(`❌ No exam available for ${user.personalNumber}`);
+
+          // If exam was previously available but now it's not, reset notification flag
+          // This allows re-notification if a new exam appears later
+          if (user.notified) {
+            console.log(`   Previous exam (${user.notifiedDate}) no longer available, resetting notification flag`);
+            await db.updateUser(user.id, {
+              notified: false,
+              notifiedDate: undefined,
+            });
+          }
         }
 
         // Small delay between users to avoid rate limiting

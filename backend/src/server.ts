@@ -7,6 +7,11 @@ import { startScheduler } from './utils/scheduler';
 
 dotenv.config();
 
+// Debug: Log environment variables
+console.log('🔧 Environment variables loaded:');
+console.log('- RESEND_API_KEY:', process.env.RESEND_API_KEY ? '✅ Set' : '❌ Not set');
+console.log('- FROM_EMAIL:', process.env.FROM_EMAIL || 'Not set');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
