@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import examRoutes from './routes/examRoutes';
-import { db } from './utils/database';
+import { db } from './utils/databaseHybrid';
 import { startScheduler } from './utils/scheduler';
 
 dotenv.config();

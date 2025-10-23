@@ -4,12 +4,12 @@ import { User } from '../types';
 
 const DB_PATH = path.join(__dirname, '../../db.json');
 
-interface Database {
+interface DatabaseData {
   users: User[];
 }
 
 class Database {
-  private data: Database = { users: [] };
+  private data: DatabaseData = { users: [] };
 
   async load() {
     try {
